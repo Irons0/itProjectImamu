@@ -1,0 +1,467 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'IBM Plex Sans Arabic', sans-serif; }
+  :root { --teal: #00768c; --gold: #b2945e; --teal2: #4a94a4; --teal3: #3d7a88; --red: #d85d5d; }
+  #app { direction: rtl; background: var(--color-background-primary); min-height: 520px; }
+  .page { display: none; flex-direction: column; min-height: 520px; }
+  .page.active { display: flex; }
+  .ph { background: var(--teal); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--gold); flex-shrink: 0; }
+  .ph-title { font-weight: 700; font-size: 15px; }
+  .ph-badge { background: var(--gold); color: white; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: 'IBM Plex Sans Arabic', sans-serif; }
+  .back-btn:hover { background: rgba(255,255,255,0.35); }
+  .pb { padding: 16px 20px; flex: 1; }
+  .page-title { font-size: 17px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 3px; }
+  .page-sub { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 14px; }
+  .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .pbtn { background: var(--teal2); color: white; padding: 16px 8px; font-weight: 700; font-size: 14px; border-radius: 6px; cursor: pointer; border: none; font-family: 'IBM Plex Sans Arabic', sans-serif; transition: background 0.15s; }
+  .pbtn:hover { background: var(--teal3); }
+  .pinfo { text-align: right; margin-top: 4px; }
+  .pbar { background: var(--gold); color: white; padding: 6px 12px; font-size: 13px; display: inline-block; border-radius: 3px; cursor: pointer; }
+  .pred { background: var(--red); color: white; padding: 10px; font-size: 13px; text-align: center; border-radius: 4px; margin-top: 8px; }
+  .home-welcome { font-size: 18px; font-weight: 700; color: var(--color-text-primary); margin: 0 0 6px; }
+  .home-sub { font-size: 14px; color: var(--color-text-secondary); margin: 0 0 20px; }
+
+  /* CALENDAR - smaller with border */
+  .cal-wrap { border: 1px solid var(--color-border-secondary); border-radius: 8px; padding: 10px 10px 8px; margin-bottom: 12px; background: var(--color-background-primary); max-width: 340px; }
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cal-month { font-weight: 700; font-size: 13px; color: var(--color-text-primary); }
+  .cal-nav { background: none; border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; }
+  .cal-nav:hover { background: var(--color-background-secondary); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day-name { text-align: center; font-size: 10px; color: var(--color-text-secondary); padding: 2px 0 4px; font-weight: 500; }
+  .cal-day { text-align: center; font-size: 11px; padding: 5px 1px; border-radius: 4px; cursor: pointer; color: var(--color-text-primary); transition: background 0.1s; }
+  .cal-day:hover:not(.empty):not(.disabled) { background: rgba(0,118,140,0.12); }
+  .cal-day.selected { background: var(--teal); color: white; font-weight: 700; }
+  .cal-day.today { font-weight: 700; color: var(--teal); }
+  .cal-day.empty, .cal-day.disabled { color: var(--color-border-secondary); cursor: default; }
+  .cal-day.disabled:hover { background: none; }
+
+  .slots-wrap { margin-bottom: 12px; }
+  .slots-title { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; max-width: 340px; }
+  .slot-btn { padding: 6px 2px; border: 0.5px solid var(--color-border-secondary); border-radius: 5px; font-size: 11px; cursor: pointer; background: var(--color-background-primary); color: var(--color-text-primary); font-family: 'IBM Plex Sans Arabic', sans-serif; transition: all 0.1s; }
+  .slot-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .slot-btn.selected { background: var(--teal); color: white; border-color: var(--teal); }
+  .slot-btn.taken { background: var(--color-background-secondary); color: var(--color-border-secondary); cursor: not-allowed; text-decoration: line-through; }
+
+  .action-row { display: flex; gap: 10px; margin-top: 6px; max-width: 340px; }
+  .btn-cancel { flex: 1; padding: 10px; border: 0.5px solid var(--color-border-secondary); background: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: 'IBM Plex Sans Arabic', sans-serif; color: var(--color-text-secondary); transition: all 0.12s; }
+  .btn-cancel:hover { border-color: var(--red); color: var(--red); }
+  .btn-confirm { flex: 1; padding: 10px; background: var(--teal); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif; transition: background 0.12s; }
+  .btn-confirm:hover:not(:disabled) { background: var(--teal3); }
+  .btn-confirm:disabled { background: var(--color-border-secondary); cursor: not-allowed; }
+
+  .appt-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .appt-card { border: 0.5px solid var(--color-border-tertiary); border-radius: 8px; padding: 10px 12px; background: var(--color-background-primary); cursor: pointer; transition: border-color 0.12s; }
+  .appt-card:hover { border-color: var(--teal); }
+  .appt-card.selected { border-color: var(--teal); background: rgba(0,118,140,0.06); }
+  .appt-meta { font-size: 11px; color: var(--color-text-secondary); margin-top: 3px; }
+  .appt-name { font-size: 13px; font-weight: 700; color: var(--color-text-primary); }
+
+  .advisor-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  .advisor-card { border: 0.5px solid var(--color-border-tertiary); border-radius: 8px; padding: 12px; background: var(--color-background-primary); }
+  .advisor-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin-bottom: 7px; }
+  .advisor-name { font-size: 12px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 3px; }
+  .advisor-office { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 5px; }
+  .avail-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; margin-bottom: 5px; }
+  .avail-badge.available { background: #e1f5ee; color: #0f6e56; }
+  .avail-badge.busy { background: #fcebeb; color: #a32d2d; }
+  .hours-row { font-size: 10px; color: var(--color-text-secondary); margin-top: 2px; }
+
+  .view-card { border: 0.5px solid var(--teal); border-radius: 10px; padding: 14px; background: rgba(0,118,140,0.05); margin-bottom: 10px; }
+  .view-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .view-label { font-size: 12px; color: var(--color-text-secondary); }
+  .view-value { font-size: 13px; font-weight: 700; color: var(--color-text-primary); }
+  .no-appt { text-align: center; padding: 40px 0; color: var(--color-text-secondary); font-size: 14px; }
+
+  .oh-card { border: 0.5px solid var(--color-border-tertiary); border-radius: 8px; padding: 12px 14px; background: var(--color-background-primary); margin-bottom: 10px; }
+  .oh-title { font-size: 14px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 2px; }
+  .oh-subtitle { font-size: 11px; color: var(--teal); margin-bottom: 8px; }
+  .oh-rule { font-size: 12px; color: var(--color-text-secondary); padding: 5px 0; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .oh-rule:last-child { border-bottom: none; }
+  .oh-tag { background: rgba(0,118,140,0.1); color: var(--teal); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+
+  .success-box { text-align: center; padding: 28px 20px; }
+  .success-icon { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 26px; }
+  .success-title { font-size: 17px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 5px; }
+  .success-sub { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 20px; }
+  .success-detail { background: var(--color-background-secondary); border-radius: 8px; padding: 12px 14px; text-align: right; margin-bottom: 18px; }
+  .sd-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+  .sd-label { color: var(--color-text-secondary); }
+  .sd-value { font-weight: 700; color: var(--color-text-primary); }
+  .btn-home { background: var(--teal); color: white; border: none; padding: 11px 28px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'IBM Plex Sans Arabic', sans-serif; }
+</style>
+
+<div id="app">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="ph"><div class="ph-title">الإرشاد الأكاديمي</div><span class="ph-badge">بوابة الطالب</span></div>
+    <div class="pb" style="text-align:center">
+      <h2 class="home-welcome">مرحباً بك في نظام الإرشاد الأكاديمي</h2>
+      <p class="home-sub">هذه صفحة إدخال بيانات نظام الإرشاد الأكاديمي للطالب. من هنا، يمكنك تصفح الخدمات باستخدام الروابط أدناه</p>
+      <div class="pgrid">
+        <button class="pbtn" onclick="go('book')">حجز موعد</button>
+        <button class="pbtn" onclick="go('edit')">تعديل موعد</button>
+        <button class="pbtn" onclick="go('cancel')">إلغاء موعد</button>
+        <button class="pbtn" onclick="go('view')">عرض المواعيد</button>
+        <button class="pbtn" onclick="go('status')">التحقق من حالة المرشد</button>
+        <button class="pbtn" onclick="go('hours')">الساعات المكتبية</button>
+      </div>
+      <div class="pinfo">
+        <span class="pbar">للاطلاع على التعليمات اضغط هنا</span>
+        <div class="pred">يرجى الالتزام بمواعيد الإرشاد الأكاديمي المحددة</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOK -->
+  <div class="page" id="page-book">
+    <div class="ph"><div class="ph-title">حجز موعد</div><button class="back-btn" onclick="go('home')">→ الرئيسية</button></div>
+    <div class="pb">
+      <div class="page-title">حجز موعد جديد</div>
+      <div class="page-sub">اختر يوماً ثم حدد الوقت المناسب لإتمام الحجز</div>
+      <div class="cal-wrap" id="book-cal"></div>
+      <div class="slots-wrap" id="book-slots" style="display:none">
+        <div class="slots-title">المواعيد المتاحة</div>
+        <div class="slots-grid" id="book-slots-grid"></div>
+      </div>
+      <div class="action-row">
+        <button class="btn-cancel" onclick="go('home')">إلغاء</button>
+        <button class="btn-confirm" id="book-confirm-btn" disabled onclick="confirmBook()">تأكيد الموعد</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT -->
+  <div class="page" id="page-edit">
+    <div class="ph"><div class="ph-title">تعديل موعد</div><button class="back-btn" onclick="go('home')">→ الرئيسية</button></div>
+    <div class="pb">
+      <div class="page-title">تعديل موعد</div>
+      <div class="page-sub">اختر الموعد الذي تريد تعديله</div>
+      <div class="appt-list" id="edit-list"></div>
+      <div id="edit-cal-wrap" style="display:none">
+        <div class="page-sub" style="margin-bottom:8px">اختر موعداً جديداً</div>
+        <div class="cal-wrap" id="edit-cal"></div>
+        <div class="slots-wrap" id="edit-slots" style="display:none">
+          <div class="slots-title">المواعيد المتاحة</div>
+          <div class="slots-grid" id="edit-slots-grid"></div>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn-cancel" onclick="go('home')">إلغاء</button>
+        <button class="btn-confirm" id="edit-confirm-btn" disabled onclick="confirmEdit()">حفظ التعديل</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CANCEL -->
+  <div class="page" id="page-cancel">
+    <div class="ph"><div class="ph-title">إلغاء موعد</div><button class="back-btn" onclick="go('home')">→ الرئيسية</button></div>
+    <div class="pb">
+      <div class="page-title">إلغاء موعد</div>
+      <div class="page-sub">اختر الموعد الذي تريد إلغاؤه</div>
+      <div class="appt-list" id="cancel-list"></div>
+      <div class="action-row" style="margin-top:8px">
+        <button class="btn-cancel" onclick="go('home')">رجوع</button>
+        <button class="btn-confirm" id="cancel-confirm-btn" disabled style="background:var(--red)" onclick="confirmCancel()">تأكيد الإلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW -->
+  <div class="page" id="page-view">
+    <div class="ph"><div class="ph-title">عرض المواعيد</div><button class="back-btn" onclick="go('home')">→ الرئيسية</button></div>
+    <div class="pb">
+      <div class="page-title">مواعيدي</div>
+      <div class="page-sub">جميع مواعيدك المحجوزة</div>
+      <div id="view-content"></div>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="page" id="page-status">
+    <div class="ph"><div class="ph-title">حالة المرشد</div><button class="back-btn" onclick="go('home')">→ الرئيسية</button></div>
+    <div class="pb">
+      <div class="page-title">التحقق من حالة المرشد</div>
+      <div class="page-sub">حالة توفر المرشدين الأكاديميين هذا الأسبوع</div>
+      <div class="advisor-grid" id="status-grid"></div>
+    </div>
+  </div>
+
+  <!-- HOURS -->
+  <div class="page" id="page-hours">
+    <div class="ph"><div class="ph-title">الساعات المكتبية</div><button class="back-btn" onclick="go('home')">→ الرئيسية</button></div>
+    <div class="pb">
+      <div class="page-title">الساعات المكتبية</div>
+      <div class="page-sub">سياسات وأوقات استقبال الطلاب</div>
+      <div id="hours-content"></div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="page" id="page-success">
+    <div class="ph"><div class="ph-title">الإرشاد الأكاديمي</div><span class="ph-badge">بوابة الطالب</span></div>
+    <div class="pb">
+      <div class="success-box">
+        <div class="success-icon" id="success-icon">✓</div>
+        <div class="success-title" id="success-title">تم بنجاح</div>
+        <div class="success-sub" id="success-sub"></div>
+        <div class="success-detail" id="success-detail"></div>
+        <button class="btn-home" onclick="go('home')">العودة للرئيسية</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ADVISORS = [
+  { name: 'الصادق محمد آدم',       office: 3042, colors: ['#e1f5ee','#0f6e56'], initials: 'صآ', slots: ['أحد 10:00','أحد 11:00','ثلاثاء 9:00','ثلاثاء 10:00','خميس 11:00'] },
+  { name: 'مهنا مقبول علي مسلم',   office: 3078, colors: ['#e6f1fb','#185fa5'], initials: 'مم', slots: ['اثنين 9:00','اثنين 10:00','أربعاء 10:00','خميس 9:00'] },
+  { name: 'فهد عمر العمري',         office: 3115, colors: ['#faeeda','#854f0b'], initials: 'فع', slots: ['أحد 9:00','ثلاثاء 11:00','أربعاء 9:00','أربعاء 11:00'] },
+  { name: 'أمير محمد طالب',         office: 3137, colors: ['#fbeaf0','#993556'], initials: 'أط', slots: ['أحد 8:00','اثنين 11:00','ثلاثاء 8:00','خميس 10:00'] },
+];
+
+let STATE = {
+  bookDay:null, bookSlot:null,
+  editAppt:null, editDay:null, editSlot:null,
+  cancelAppt:null,
+  appointments:[
+    {id:1, advisor:0, date:'2026-05-04', time:'10:00', label:'الأحد 4 مايو 10:00'},
+    {id:2, advisor:2, date:'2026-05-06', time:'09:00', label:'الثلاثاء 6 مايو 9:00'},
+  ],
+  calMonth:4, calYear:2026,
+  editCalMonth:4, editCalYear:2026,
+};
+
+const DAYS_AR=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+const MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const SLOTS=['8:00','9:00','10:00','11:00','12:00','13:00','14:00','15:00'];
+const TAKEN=['9:00','13:00'];
+
+function go(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(page==='book'){STATE.bookDay=null;STATE.bookSlot=null;renderCal('book',STATE.calMonth,STATE.calYear);}
+  if(page==='edit'){STATE.editAppt=null;STATE.editDay=null;STATE.editSlot=null;renderEditList();document.getElementById('edit-cal-wrap').style.display='none';document.getElementById('edit-confirm-btn').disabled=true;}
+  if(page==='cancel'){STATE.cancelAppt=null;renderCancelList();document.getElementById('cancel-confirm-btn').disabled=true;}
+  if(page==='view') renderView();
+  if(page==='status') renderStatus();
+  if(page==='hours') renderHours();
+}
+
+function renderCal(prefix,month,year){
+  const wrap=document.getElementById(prefix+'-cal');
+  const first=new Date(year,month,1).getDay();
+  const days=new Date(year,month+1,0).getDate();
+  const today=new Date();
+  let html=`<div class="cal-header">
+    <button class="cal-nav" onclick="navCal('${prefix}',-1)">&#8250;</button>
+    <span class="cal-month">${MONTHS_AR[month]} ${year}</span>
+    <button class="cal-nav" onclick="navCal('${prefix}',1)">&#8249;</button>
+  </div><div class="cal-grid">`;
+  DAYS_AR.forEach(d=>html+=`<div class="cal-day-name">${d}</div>`);
+  for(let i=0;i<first;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const dt=new Date(year,month,d);
+    const isToday=dt.toDateString()===today.toDateString();
+    const isPast=dt<today&&!isToday;
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const selDay=prefix==='book'?STATE.bookDay:STATE.editDay;
+    const isSel=selDay===dateStr;
+    let cls='cal-day'+(isPast?' disabled':'')+(isToday?' today':'')+(isSel?' selected':'');
+    html+=`<div class="${cls}" onclick="selectDay('${prefix}','${dateStr}')">${d}</div>`;
+  }
+  html+='</div>';
+  wrap.innerHTML=html;
+}
+
+function navCal(prefix,dir){
+  if(prefix==='book'){
+    STATE.calMonth+=dir;
+    if(STATE.calMonth>11){STATE.calMonth=0;STATE.calYear++;}
+    if(STATE.calMonth<0){STATE.calMonth=11;STATE.calYear--;}
+    renderCal('book',STATE.calMonth,STATE.calYear);
+  } else {
+    STATE.editCalMonth+=dir;
+    if(STATE.editCalMonth>11){STATE.editCalMonth=0;STATE.editCalYear++;}
+    if(STATE.editCalMonth<0){STATE.editCalMonth=11;STATE.editCalYear--;}
+    renderCal('edit',STATE.editCalMonth,STATE.editCalYear);
+  }
+}
+
+function selectDay(prefix,dateStr){
+  const dt=new Date(dateStr);
+  if(dt<new Date()&&dt.toDateString()!==new Date().toDateString()) return;
+  if(prefix==='book'){
+    STATE.bookDay=dateStr;STATE.bookSlot=null;
+    renderCal('book',STATE.calMonth,STATE.calYear);
+    renderSlots('book');
+    document.getElementById('book-confirm-btn').disabled=true;
+  } else {
+    STATE.editDay=dateStr;STATE.editSlot=null;
+    renderCal('edit',STATE.editCalMonth,STATE.editCalYear);
+    renderSlots('edit');
+    document.getElementById('edit-confirm-btn').disabled=true;
+  }
+}
+
+function renderSlots(prefix){
+  const wrap=document.getElementById(prefix+'-slots');
+  const grid=document.getElementById(prefix+'-slots-grid');
+  wrap.style.display='block';
+  const selSlot=prefix==='book'?STATE.bookSlot:STATE.editSlot;
+  grid.innerHTML=SLOTS.map(s=>{
+    const isTaken=TAKEN.includes(s);
+    let cls='slot-btn'+(isTaken?' taken':'')+(selSlot===s?' selected':'');
+    return `<button class="${cls}" ${isTaken?'disabled':''} onclick="selectSlot('${prefix}','${s}')">${s}</button>`;
+  }).join('');
+}
+
+function selectSlot(prefix,slot){
+  if(prefix==='book'){STATE.bookSlot=slot;document.getElementById('book-confirm-btn').disabled=false;}
+  else {STATE.editSlot=slot;document.getElementById('edit-confirm-btn').disabled=!(STATE.editAppt&&STATE.editDay&&STATE.editSlot);}
+  renderSlots(prefix);
+}
+
+function confirmBook(){
+  if(!STATE.bookDay||!STATE.bookSlot) return;
+  const advisor=ADVISORS[Math.floor(Math.random()*ADVISORS.length)];
+  const parts=STATE.bookDay.split('-');
+  const d=new Date(STATE.bookDay);
+  const label=`${DAYS_AR[d.getDay()]} ${parseInt(parts[2])} ${MONTHS_AR[parseInt(parts[1])-1]} ${STATE.bookSlot}`;
+  STATE.appointments.push({id:Date.now(),advisor:ADVISORS.indexOf(advisor),date:STATE.bookDay,time:STATE.bookSlot,label});
+  showSuccess('✓','تم حجز الموعد بنجاح','سيتم إرسال تذكير قبل موعدك',[
+    ['المرشد',advisor.name],['المكتب',String(advisor.office)],['الموعد',label]
+  ],false);
+}
+
+function renderEditList(){
+  const list=document.getElementById('edit-list');
+  if(!STATE.appointments.length){list.innerHTML='<div class="no-appt">لا توجد مواعيد محجوزة</div>';return;}
+  list.innerHTML=STATE.appointments.map(a=>{
+    const adv=ADVISORS[a.advisor];
+    return `<div class="appt-card${STATE.editAppt===a.id?' selected':''}" onclick="selectEditAppt(${a.id})">
+      <div class="appt-name">${a.label}</div>
+      <div class="appt-meta">المرشد: ${adv.name} | مكتب ${adv.office}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectEditAppt(id){
+  STATE.editAppt=id;STATE.editDay=null;STATE.editSlot=null;
+  renderEditList();
+  document.getElementById('edit-cal-wrap').style.display='block';
+  renderCal('edit',STATE.editCalMonth,STATE.editCalYear);
+  document.getElementById('edit-slots').style.display='none';
+  document.getElementById('edit-confirm-btn').disabled=true;
+}
+
+function confirmEdit(){
+  if(!STATE.editAppt||!STATE.editDay||!STATE.editSlot) return;
+  const appt=STATE.appointments.find(a=>a.id===STATE.editAppt);
+  if(!appt) return;
+  const d=new Date(STATE.editDay);
+  const parts=STATE.editDay.split('-');
+  appt.label=`${DAYS_AR[d.getDay()]} ${parseInt(parts[2])} ${MONTHS_AR[parseInt(parts[1])-1]} ${STATE.editSlot}`;
+  appt.date=STATE.editDay;appt.time=STATE.editSlot;
+  const adv=ADVISORS[appt.advisor];
+  showSuccess('✓','تم تعديل الموعد بنجاح','تم تحديث موعدك بالتفاصيل الجديدة',[
+    ['المرشد',adv.name],['الموعد الجديد',appt.label]
+  ],false);
+}
+
+function renderCancelList(){
+  const list=document.getElementById('cancel-list');
+  if(!STATE.appointments.length){list.innerHTML='<div class="no-appt">لا توجد مواعيد لإلغائها</div>';return;}
+  list.innerHTML=STATE.appointments.map(a=>{
+    const adv=ADVISORS[a.advisor];
+    return `<div class="appt-card${STATE.cancelAppt===a.id?' selected':''}" onclick="selectCancelAppt(${a.id})">
+      <div class="appt-name">${a.label}</div>
+      <div class="appt-meta">المرشد: ${adv.name} | مكتب ${adv.office}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectCancelAppt(id){STATE.cancelAppt=id;renderCancelList();document.getElementById('cancel-confirm-btn').disabled=false;}
+
+function confirmCancel(){
+  if(!STATE.cancelAppt) return;
+  const appt=STATE.appointments.find(a=>a.id===STATE.cancelAppt);
+  if(!appt) return;
+  const adv=ADVISORS[appt.advisor];
+  STATE.appointments=STATE.appointments.filter(a=>a.id!==STATE.cancelAppt);
+  showSuccess('✗','تم إلغاء الموعد','تم إلغاء موعدك بنجاح',[
+    ['الموعد الملغى',appt.label],['المرشد',adv.name]
+  ],true);
+}
+
+function renderView(){
+  const c=document.getElementById('view-content');
+  if(!STATE.appointments.length){c.innerHTML='<div class="no-appt">لا توجد مواعيد محجوزة حالياً</div>';return;}
+  c.innerHTML=STATE.appointments.map(a=>{
+    const adv=ADVISORS[a.advisor];
+    return `<div class="view-card">
+      <div class="view-row"><span class="view-label">المرشد الأكاديمي</span><span class="view-value">${adv.name}</span></div>
+      <div class="view-row"><span class="view-label">رقم المكتب</span><span class="view-value">${adv.office}</span></div>
+      <div class="view-row"><span class="view-label">الموعد</span><span class="view-value">${a.label}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderStatus(){
+  const g=document.getElementById('status-grid');
+  const today=new Date().getDay();
+  g.innerHTML=ADVISORS.map((adv,i)=>{
+    const isAvail=today%2===i%2;
+    return `<div class="advisor-card">
+      <div class="advisor-avatar" style="background:${adv.colors[0]};color:${adv.colors[1]}">${adv.initials}</div>
+      <div class="advisor-name">${adv.name}</div>
+      <div class="advisor-office">مكتب ${adv.office}</div>
+      <span class="avail-badge ${isAvail?'available':'busy'}">${isAvail?'متاح الآن':'مشغول'}</span>
+      <div style="margin-top:5px;font-size:10px;color:var(--color-text-secondary);font-weight:700">أوقات التوفر الأسبوعية:</div>
+      ${adv.slots.map(s=>`<div class="hours-row">• ${s}</div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderHours(){
+  document.getElementById('hours-content').innerHTML=`
+    <div class="oh-card">
+      <div class="oh-title">سياسة الحضور والالتزام</div>
+      <div class="oh-subtitle">قواعد عامة لجميع الطلاب</div>
+      <div class="oh-rule"><span>الحضور قبل الموعد بـ 5 دقائق</span><span class="oh-tag">إلزامي</span></div>
+      <div class="oh-rule"><span>الإلغاء قبل الموعد بـ 24 ساعة على الأقل</span><span class="oh-tag">مطلوب</span></div>
+      <div class="oh-rule"><span>الغياب دون إشعار يُعدّ محضر تأخر أكاديمي</span><span class="oh-tag">تحذير</span></div>
+      <div class="oh-rule"><span>لكل طالب حد أقصى 3 مواعيد شهرياً</span><span class="oh-tag">حد</span></div>
+    </div>
+    <div class="oh-card">
+      <div class="oh-title">أوقات الاستقبال العامة</div>
+      <div class="oh-subtitle">مبنى الإرشاد الأكاديمي - الدور الثالث</div>
+      <div class="oh-rule"><span>الأحد والثلاثاء والخميس</span><span>8:00 – 12:00</span></div>
+      <div class="oh-rule"><span>الاثنين والأربعاء</span><span>10:00 – 14:00</span></div>
+      <div class="oh-rule"><span>الجمعة والسبت</span><span>مغلق</span></div>
+    </div>
+    <div class="oh-card">
+      <div class="oh-title">قنوات التواصل مع المرشد</div>
+      <div class="oh-subtitle">للحالات العاجلة أو الاستفسارات الكتابية</div>
+      <div class="oh-rule"><span>البريد الإلكتروني الرسمي للقسم</span><span class="oh-tag">it.advising@imamu.edu.sa</span></div>
+      <div class="oh-rule"><span>الهاتف الداخلي</span><span>2200</span></div>
+      <div class="oh-rule"><span>الرد على البريد خلال</span><span>48 ساعة عمل</span></div>
+    </div>
+  `;
+}
+
+function showSuccess(icon,title,sub,rows,isDanger){
+  document.getElementById('success-icon').textContent=icon;
+  document.getElementById('success-icon').style.background=isDanger?'#fcebeb':'#e1f5ee';
+  document.getElementById('success-icon').style.color=isDanger?'#a32d2d':'#0f6e56';
+  document.getElementById('success-title').textContent=title;
+  document.getElementById('success-sub').textContent=sub;
+  document.getElementById('success-detail').innerHTML=rows.map(r=>`<div class="sd-row"><span class="sd-label">${r[0]}</span><span class="sd-value">${r[1]}</span></div>`).join('');
+  go('success');
+}
+</script>

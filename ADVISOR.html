@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بوابة المرشد الأكاديمي</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* خلفية بيضاء ثابتة - بدون وضع مظلم */
+  :root {
+    --teal: #00768c;
+    --gold: #b2945e;
+    --teal2: #4a94a4;
+    --teal3: #3d7a88;
+    --red: #d85d5d;
+    --green: #1a9e76;
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f8f8f8;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #5a5a5a;
+    --color-border-secondary: #d4d4d4;
+    --color-border-tertiary: #eaeaea;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'IBM Plex Sans Arabic', sans-serif; }
+  body { background: #ffffff; }
+  #app { direction: rtl; background: #ffffff; min-height: 520px; }
+  .page { display: none; flex-direction: column; min-height: 520px; }
+  .page.active { display: flex; }
+  .ph { background: var(--teal); color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--gold); flex-shrink: 0; }
+  .ph-title { font-weight: 700; font-size: 15px; }
+  .ph-badge { background: var(--gold); color: white; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: 'IBM Plex Sans Arabic', sans-serif; }
+  .back-btn:hover { background: rgba(255,255,255,0.35); }
+  .pb { padding: 16px 20px; flex: 1; }
+  .page-title { font-size: 17px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 3px; }
+  .page-sub { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 14px; }
+  .pgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+  .pbtn { background: var(--teal2); color: white; padding: 16px 8px; font-weight: 700; font-size: 14px; border-radius: 6px; cursor: pointer; border: none; font-family: 'IBM Plex Sans Arabic', sans-serif; transition: background 0.15s; }
+  .pbtn:hover { background: var(--teal3); }
+  .pinfo { text-align: right; margin-top: 4px; }
+  .pbar { background: var(--gold); color: white; padding: 6px 12px; font-size: 13px; display: inline-block; border-radius: 3px; cursor: pointer; }
+  .pyellow { background: #fef5e7; color: #c27e0e; padding: 10px; font-size: 13px; text-align: center; border-radius: 4px; margin-top: 8px; font-weight: 500; }
+  .home-welcome { font-size: 18px; font-weight: 700; color: var(--color-text-primary); margin: 0 0 6px; }
+  .home-sub { font-size: 14px; color: var(--color-text-secondary); margin: 0 0 20px; }
+
+  /* CALENDAR */
+  .cal-wrap { border: 1px solid var(--color-border-secondary); border-radius: 8px; padding: 10px 10px 8px; margin-bottom: 12px; background: var(--color-background-primary); max-width: 360px; }
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cal-month { font-weight: 700; font-size: 13px; color: var(--color-text-primary); }
+  .cal-nav { background: none; border: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1; padding: 0; }
+  .cal-nav:hover { background: var(--color-background-secondary); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day-name { text-align: center; font-size: 10px; color: var(--color-text-secondary); padding: 2px 0 4px; font-weight: 500; }
+  .cal-day { text-align: center; font-size: 11px; padding: 5px 1px; border-radius: 4px; cursor: pointer; color: var(--color-text-primary); transition: background 0.1s; position: relative; }
+  .cal-day:hover:not(.empty):not(.disabled) { background: rgba(0,118,140,0.12); }
+  .cal-day.selected { background: var(--teal); color: white; font-weight: 700; }
+  .cal-day.today { font-weight: 700; color: var(--teal); }
+  .cal-day.empty, .cal-day.disabled { color: var(--color-border-secondary); cursor: default; }
+  .cal-day.has-appts::after { content: ''; width: 4px; height: 4px; background: var(--gold); border-radius: 50%; position: absolute; bottom: 1px; left: 50%; transform: translateX(-50%); }
+  .cal-day.selected.has-appts::after { background: white; }
+
+  /* SLOTS */
+  .slots-wrap { margin-bottom: 12px; }
+  .slots-title { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .slots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; max-width: 360px; }
+  .slot-item { border: 0.5px solid var(--color-border-secondary); border-radius: 6px; padding: 6px 4px; font-size: 11px; background: var(--color-background-primary); }
+  .slot-time { color: var(--color-text-primary); font-weight: 700; text-align: center; }
+  .slot-status { text-align: center; font-size: 9px; margin-top: 2px; }
+  .slot-item.free .slot-status { color: var(--green); }
+  .slot-item.booked { border-color: var(--teal); background: rgba(0,118,140,0.06); }
+  .slot-item.booked .slot-status { color: var(--teal); }
+  .slot-btn-small { display: block; width: 100%; padding: 6px 2px; border: 0.5px solid var(--color-border-secondary); border-radius: 5px; font-size: 11px; cursor: pointer; background: var(--color-background-primary); color: var(--color-text-primary); font-family: 'IBM Plex Sans Arabic', sans-serif; transition: all 0.1s; text-align: center; }
+  .slot-btn-small:hover { border-color: var(--teal); color: var(--teal); }
+  .slot-btn-small.selected { background: var(--teal); color: white; border-color: var(--teal); }
+  .slot-btn-small.blocked { background: var(--color-background-secondary); color: var(--color-border-secondary); cursor: not-allowed; text-decoration: line-through; }
+
+  /* ACTION */
+  .action-row { display: flex; gap: 10px; margin-top: 6px; max-width: 360px; }
+  .btn-cancel { flex: 1; padding: 10px; border: 0.5px solid var(--color-border-secondary); background: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: 'IBM Plex Sans Arabic', sans-serif; color: var(--color-text-secondary); transition: all 0.12s; }
+  .btn-cancel:hover { border-color: var(--red); color: var(--red); }
+  .btn-confirm { flex: 1; padding: 10px; background: var(--teal); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif; transition: background 0.12s; }
+  .btn-confirm:hover:not(:disabled) { background: var(--teal3); }
+  .btn-confirm:disabled { background: var(--color-border-secondary); cursor: not-allowed; }
+  .btn-danger { flex: 1; padding: 10px; background: var(--red); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif; transition: background 0.12s; }
+  .btn-danger:hover:not(:disabled) { background: #b84646; }
+  .btn-danger:disabled { background: var(--color-border-secondary); cursor: not-allowed; }
+  .btn-green { flex: 1; padding: 10px; background: var(--green); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700; font-family: 'IBM Plex Sans Arabic', sans-serif; }
+
+  /* APPT LIST */
+  .appt-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .appt-card { border: 0.5px solid var(--color-border-tertiary); border-radius: 8px; padding: 10px 12px; background: var(--color-background-primary); cursor: pointer; transition: border-color 0.12s; }
+  .appt-card:hover { border-color: var(--teal); }
+  .appt-card.selected { border-color: var(--teal); background: rgba(0,118,140,0.06); }
+  .appt-name { font-size: 13px; font-weight: 700; color: var(--color-text-primary); }
+  .appt-meta { font-size: 11px; color: var(--color-text-secondary); margin-top: 3px; }
+  .appt-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; margin-top: 4px; }
+  .appt-badge.pending { background: #fff3cd; color: #856404; }
+  .appt-badge.confirmed { background: #e1f5ee; color: #0f6e56; }
+
+  /* OH CARD */
+  .oh-card { border: 0.5px solid var(--color-border-tertiary); border-radius: 8px; padding: 12px 14px; background: var(--color-background-primary); margin-bottom: 10px; }
+  .oh-title { font-size: 14px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 2px; }
+  .oh-subtitle { font-size: 11px; color: var(--teal); margin-bottom: 8px; }
+  .oh-rule { font-size: 12px; color: var(--color-text-secondary); padding: 7px 0; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .oh-rule:last-child { border-bottom: none; }
+  .oh-tag { background: rgba(0,118,140,0.1); color: var(--teal); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+
+  /* NOTIFICATION */
+  .notif-wrap { max-width: 360px; }
+  .notif-group { margin-bottom: 12px; }
+  .notif-group-title { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .notif-card { border: 0.5px solid var(--color-border-tertiary); border-radius: 8px; padding: 10px 12px; background: var(--color-background-primary); margin-bottom: 6px; cursor: pointer; transition: border-color 0.12s; }
+  .notif-card.selected { border-color: var(--teal); background: rgba(0,118,140,0.04); }
+  .notif-card:hover { border-color: var(--teal); }
+  .notif-title-row { display: flex; justify-content: space-between; align-items: center; }
+  .notif-name { font-size: 13px; font-weight: 700; color: var(--color-text-primary); }
+  .notif-type { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .notif-type.reminder { background: #e1f5ee; color: #0f6e56; }
+  .notif-type.cancel { background: #fcebeb; color: #a32d2d; }
+  .notif-type.general { background: rgba(0,118,140,0.1); color: var(--teal); }
+  .notif-msg { font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; }
+  .notif-textarea { width: 100%; max-width: 360px; padding: 10px; border: 0.5px solid var(--color-border-secondary); border-radius: 6px; font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 13px; color: var(--color-text-primary); background: var(--color-background-primary); resize: none; min-height: 90px; margin-bottom: 8px; outline: none; transition: border-color 0.12s; }
+  .notif-textarea:focus { border-color: var(--teal); }
+
+  /* VIEW CARD */
+  .view-card { border: 0.5px solid var(--teal); border-radius: 10px; padding: 14px; background: rgba(0,118,140,0.05); margin-bottom: 10px; }
+  .view-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .view-label { font-size: 12px; color: var(--color-text-secondary); }
+  .view-value { font-size: 13px; font-weight: 700; color: var(--color-text-primary); }
+  .no-appt { text-align: center; padding: 40px 0; color: var(--color-text-secondary); font-size: 14px; }
+
+  /* TOGGLE */
+  .toggle-wrap { display: flex; gap: 8px; margin-bottom: 12px; max-width: 360px; }
+  .toggle-btn { flex: 1; padding: 7px; border: 0.5px solid var(--color-border-secondary); border-radius: 6px; background: var(--color-background-primary); color: var(--color-text-secondary); font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.12s; }
+  .toggle-btn.active { background: var(--teal); color: white; border-color: var(--teal); font-weight: 700; }
+
+  /* INPUT */
+  .form-row { margin-bottom: 10px; max-width: 360px; }
+  .form-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .form-input { width: 100%; padding: 8px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: 6px; font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 13px; color: var(--color-text-primary); background: var(--color-background-primary); outline: none; transition: border-color 0.12s; }
+  .form-input:focus { border-color: var(--teal); }
+  .form-select { width: 100%; padding: 8px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: 6px; font-family: 'IBM Plex Sans Arabic', sans-serif; font-size: 13px; color: var(--color-text-primary); background: var(--color-background-primary); outline: none; cursor: pointer; }
+
+  .success-box { text-align: center; padding: 28px 20px; }
+  .success-icon { width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 26px; }
+  .success-title { font-size: 17px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 5px; }
+  .success-sub { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 20px; }
+  .success-detail { background: var(--color-background-secondary); border-radius: 8px; padding: 12px 14px; text-align: right; margin-bottom: 18px; }
+  .sd-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+  .sd-label { color: var(--color-text-secondary); }
+  .sd-value { font-weight: 700; color: var(--color-text-primary); }
+  .btn-home { background: var(--teal); color: white; border: none; padding: 11px 28px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'IBM Plex Sans Arabic', sans-serif; }
+
+  .avail-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .avail-badge.available { background: #e1f5ee; color: #0f6e56; }
+  .avail-badge.busy { background: #fcebeb; color: #a32d2d; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="ph"><div class="ph-title">الإرشاد الأكاديمي</div><span class="ph-badge">بوابة المرشد</span></div>
+    <div class="pb" style="text-align:center">
+      <h2 class="home-welcome">مرحباً بك في بوابة المرشد الأكاديمي</h2>
+      <p class="home-sub">هذه صفحة إدارة المواعيد والإشعارات. يمكنك التحكم الكامل في الساعات المكتبية والتواصل مع الطلاب</p>
+      <div class="pgrid">
+        <button class="pbtn" onclick="go('hours-mgmt')">إدارة الساعات المكتبية</button>
+        <button class="pbtn" onclick="go('view-appts')">عرض المواعيد</button>
+        <button class="pbtn" onclick="go('notify')">إرسال إشعار</button>
+      </div>
+      <div class="pinfo">
+        <span class="pbar" onclick="go('view-appts')">الاطلاع على جميع المواعيد</span>
+        <div class="pyellow">يرجى الحرص على تحديث ساعاتك المكتبية بشكل دوري</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOURS MANAGEMENT -->
+  <div class="page" id="page-hours-mgmt">
+    <div class="ph"><div class="ph-title">إدارة الساعات المكتبية</div><button class="back-btn" onclick="go('home')">→ الرئيسية</button></div>
+    <div class="pb">
+      <div class="page-title">ساعاتك المكتبية</div>
+      <div class="page-sub">حدد الأوقات المتاحة لاستقبال الطلاب هذا الأسبوع</div>
+      <div class="toggle-wrap">
+        <button class="toggle-btn active" id="tab-weekly" onclick="switchHoursTab('weekly')">الأسبوعي</button>
+        <button class="toggle-btn" id="tab-block" onclick="switchHoursTab('block')">حجب وقت</button>
+      </div>
+      <div id="hours-weekly-panel">
+        <div id="hours-days-list"></div>
+        <div class="action-row">
+          <button class="btn-cancel" onclick="go('home')">إلغاء</button>
+          <button class="btn-confirm" onclick="saveHours()">حفظ الساعات</button>
+        </div>
+      </div>
+      <div id="hours-block-panel" style="display:none">
+        <div class="page-sub" style="margin-bottom:8px">اختر يوماً لحجب وقت محدد (إجازة، اجتماع...)</div>
+        <div class="cal-wrap" id="block-cal"></div>
+        <div class="slots-wrap" id="block-slots" style="display:none">
+          <div class="slots-title">اختر الوقت المراد حجبه</div>
+          <div class="slots-grid" id="block-slots-grid"></div>
+        </div>
+        <div class="action-row">
+          <button class="btn-cancel" onclick="go('home')">إلغاء</button>
+          <button class="btn-danger" id="block-confirm-btn" disabled onclick="confirmBlock()">حجب الوقت</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW APPOINTMENTS -->
+  <div class="page" id="page-view-appts">
+    <div class="ph"><div class="ph-title">عرض المواعيد</div><button class="back-btn" onclick="go('home')">→ الرئيسية</button></div>
+    <div class="pb">
+      <div class="page-title">مواعيد الطلاب</div>
+      <div class="page-sub">جميع المواعيد المحجوزة معك</div>
+      <div class="toggle-wrap">
+        <button class="toggle-btn active" id="tab-upcoming" onclick="filterAppts('upcoming')">القادمة</button>
+        <button class="toggle-btn" id="tab-all" onclick="filterAppts('all')">الكل</button>
+      </div>
+      <div id="view-appts-list"></div>
+    </div>
+  </div>
+
+  <!-- NOTIFY -->
+  <div class="page" id="page-notify">
+    <div class="ph"><div class="ph-title">إرسال إشعار</div><button class="back-btn" onclick="go('home')">→ الرئيسية</button></div>
+    <div class="pb">
+      <div class="page-title">إرسال إشعار لطالب</div>
+      <div class="page-sub">اختر طالباً ثم اكتب رسالتك</div>
+      <div class="notif-wrap">
+        <div class="form-row">
+          <div class="form-label">نوع الإشعار</div>
+          <select class="form-select" id="notif-type-select">
+            <option value="reminder">تذكير بموعد</option>
+            <option value="cancel">إلغاء موعد</option>
+            <option value="general">رسالة عامة</option>
+          </select>
+        </div>
+        <div class="notif-group">
+          <div class="notif-group-title">اختر الطالب</div>
+          <div id="notif-students-list"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-label">نص الرسالة</div>
+          <textarea class="notif-textarea" id="notif-msg-input" placeholder="اكتب رسالتك هنا..."></textarea>
+        </div>
+        <div class="action-row">
+          <button class="btn-cancel" onclick="go('home')">إلغاء</button>
+          <button class="btn-confirm" id="notif-send-btn" disabled onclick="sendNotif()">إرسال الإشعار</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="page" id="page-success">
+    <div class="ph"><div class="ph-title">الإرشاد الأكاديمي</div><span class="ph-badge">بوابة المرشد</span></div>
+    <div class="pb">
+      <div class="success-box">
+        <div class="success-icon" id="success-icon">✓</div>
+        <div class="success-title" id="success-title">تم بنجاح</div>
+        <div class="success-sub" id="success-sub"></div>
+        <div class="success-detail" id="success-detail"></div>
+        <button class="btn-home" onclick="go('home')">العودة للرئيسية</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DAYS_AR = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+const MONTHS_AR = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const ALL_SLOTS = ['8:00','9:00','10:00','11:00','12:00','13:00','14:00','15:00'];
+
+const STUDENTS = [
+  { id: 1, name: 'أحمد سعد المطيري',    id_num: '441100012', level: 'المستوى السادس',  appts: 3, lastAppt: 'الأحد 4 مايو 10:00' },
+  { id: 2, name: 'محمد فهد الشهراني',   id_num: '441200045', level: 'المستوى الرابع',  appts: 2, lastAppt: 'الثلاثاء 6 مايو 9:00' },
+  { id: 3, name: 'عبدالله علي الغامدي', id_num: '441300078', level: 'المستوى الثامن', appts: 5, lastAppt: 'الأحد 4 مايو 11:00' },
+  { id: 4, name: 'خالد عمر الدوسري',   id_num: '441400091', level: 'المستوى الثاني', appts: 1, lastAppt: 'الأربعاء 7 مايو 10:00' },
+  { id: 5, name: 'سلطان ناصر الحربي',  id_num: '441500032', level: 'المستوى السادس', appts: 4, lastAppt: 'الخميس 8 مايو 11:00' },
+];
+
+const APPOINTMENTS = [
+  { id: 1, studentId: 1, date: '2026-05-04', time: '10:00', label: 'الأحد 4 مايو 10:00',    status: 'confirmed' },
+  { id: 2, studentId: 2, date: '2026-05-06', time: '09:00', label: 'الثلاثاء 6 مايو 9:00',  status: 'confirmed' },
+  { id: 3, studentId: 3, date: '2026-05-04', time: '11:00', label: 'الأحد 4 مايو 11:00',    status: 'pending' },
+  { id: 4, studentId: 4, date: '2026-05-07', time: '10:00', label: 'الأربعاء 7 مايو 10:00', status: 'pending' },
+  { id: 5, studentId: 5, date: '2026-04-28', time: '11:00', label: 'الاثنين 28 أبريل 11:00', status: 'confirmed' },
+];
+
+const WEEKLY_HOURS = {
+  0: ['9:00','10:00','11:00'],
+  1: ['10:00','11:00','12:00'],
+  2: ['9:00','10:00','11:00'],
+  4: ['8:00','9:00','10:00'],
+};
+const BLOCKED_SLOTS = {};
+
+let STATE = {
+  blockDay: null, blockSlot: null,
+  blockCalMonth: 4, blockCalYear: 2026,
+  apptFilter: 'upcoming',
+  notifStudent: null,
+  hoursTab: 'weekly',
+};
+
+function go(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (page === 'hours-mgmt') { renderHoursWeekly(); renderBlockCal(); }
+  if (page === 'view-appts') { STATE.apptFilter='upcoming'; filterAppts('upcoming'); }
+  if (page === 'notify') renderNotifyStudents();
+}
+
+/* ---- HOURS MGMT ---- */
+function switchHoursTab(tab) {
+  STATE.hoursTab = tab;
+  document.getElementById('tab-weekly').classList.toggle('active', tab === 'weekly');
+  document.getElementById('tab-block').classList.toggle('active', tab === 'block');
+  document.getElementById('hours-weekly-panel').style.display = tab === 'weekly' ? 'block' : 'none';
+  document.getElementById('hours-block-panel').style.display = tab === 'block' ? 'block' : 'none';
+}
+
+function renderHoursWeekly() {
+  const workDays = [0,1,2,3,4]; // Sun-Thu
+  const labels = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس'];
+  let html = '';
+  workDays.forEach((d, i) => {
+    const selected = WEEKLY_HOURS[d] || [];
+    html += `<div class="oh-card" style="margin-bottom:8px">
+      <div class="oh-title">${labels[i]}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">`;
+    ALL_SLOTS.forEach(s => {
+      const isSel = selected.includes(s);
+      html += `<button onclick="toggleWeeklySlot(${d},'${s}')" id="wslot-${d}-${s.replace(':','-')}"
+        style="padding:6px 10px;border-radius:5px;border:0.5px solid ${isSel?'var(--teal)':'var(--color-border-secondary)'};
+        background:${isSel?'var(--teal)':'var(--color-background-primary)'};color:${isSel?'white':'var(--color-text-secondary)'};
+        font-family:'IBM Plex Sans Arabic',sans-serif;font-size:11px;cursor:pointer;transition:all 0.1s">${s}</button>`;
+    });
+    html += `</div></div>`;
+  });
+  document.getElementById('hours-days-list').innerHTML = html;
+}
+
+function toggleWeeklySlot(day, slot) {
+  if (!WEEKLY_HOURS[day]) WEEKLY_HOURS[day] = [];
+  const idx = WEEKLY_HOURS[day].indexOf(slot);
+  if (idx > -1) WEEKLY_HOURS[day].splice(idx, 1);
+  else WEEKLY_HOURS[day].push(slot);
+  renderHoursWeekly();
+}
+
+function saveHours() {
+  let total = 0;
+  Object.values(WEEKLY_HOURS).forEach(v => total += v.length);
+  showSuccess('✓', 'تم حفظ الساعات المكتبية', 'ستظهر أوقاتك الجديدة للطلاب فوراً', [
+    ['إجمالي الساعات الأسبوعية', total + ' ساعة'],
+    ['أيام متاح', Object.keys(WEEKLY_HOURS).filter(k => WEEKLY_HOURS[k].length).length + ' أيام'],
+  ], false);
+}
+
+function renderBlockCal() {
+  const wrap = document.getElementById('block-cal');
+  const month = STATE.blockCalMonth, year = STATE.blockCalYear;
+  const first = new Date(year, month, 1).getDay();
+  const days = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  let html = `<div class="cal-header">
+    <button class="cal-nav" onclick="navBlockCal(-1)">&#8250;</button>
+    <span class="cal-month">${MONTHS_AR[month]} ${year}</span>
+    <button class="cal-nav" onclick="navBlockCal(1)">&#8249;</button>
+  </div><div class="cal-grid">`;
+  DAYS_AR.forEach(d => html += `<div class="cal-day-name">${d}</div>`);
+  for (let i = 0; i < first; i++) html += `<div class="cal-day empty"></div>`;
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(year, month, d);
+    const isPast = dt < today && dt.toDateString() !== today.toDateString();
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isSel = STATE.blockDay === dateStr;
+    let cls = 'cal-day' + (isPast ? ' disabled' : '') + (isSel ? ' selected' : '');
+    html += `<div class="${cls}" onclick="selectBlockDay('${dateStr}')">${d}</div>`;
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+function navBlockCal(dir) {
+  STATE.blockCalMonth += dir;
+  if (STATE.blockCalMonth > 11) { STATE.blockCalMonth = 0; STATE.blockCalYear++; }
+  if (STATE.blockCalMonth < 0) { STATE.blockCalMonth = 11; STATE.blockCalYear--; }
+  renderBlockCal();
+}
+
+function selectBlockDay(dateStr) {
+  const dt = new Date(dateStr);
+  if (dt < new Date() && dt.toDateString() !== new Date().toDateString()) return;
+  STATE.blockDay = dateStr;
+  STATE.blockSlot = null;
+  document.getElementById('block-confirm-btn').disabled = true;
+  renderBlockCal();
+  renderBlockSlots();
+}
+
+function renderBlockSlots() {
+  const wrap = document.getElementById('block-slots');
+  const grid = document.getElementById('block-slots-grid');
+  wrap.style.display = 'block';
+  const blocked = (BLOCKED_SLOTS[STATE.blockDay] || []);
+  grid.innerHTML = ALL_SLOTS.map(s => {
+    const isBlocked = blocked.includes(s);
+    const isSel = STATE.blockSlot === s;
+    let cls = 'slot-btn-small' + (isBlocked ? ' blocked' : '') + (isSel ? ' selected' : '');
+    return `<button class="${cls}" ${isBlocked ? 'disabled' : ''} onclick="selectBlockSlot('${s}')">${s}${isBlocked ? '<br><span style="font-size:9px">محجوب</span>' : ''}</button>`;
+  }).join('');
+}
+
+function selectBlockSlot(slot) {
+  STATE.blockSlot = slot;
+  document.getElementById('block-confirm-btn').disabled = false;
+  renderBlockSlots();
+}
+
+function confirmBlock() {
+  if (!STATE.blockDay || !STATE.blockSlot) return;
+  if (!BLOCKED_SLOTS[STATE.blockDay]) BLOCKED_SLOTS[STATE.blockDay] = [];
+  BLOCKED_SLOTS[STATE.blockDay].push(STATE.blockSlot);
+  showSuccess('✓', 'تم حجب الوقت', 'لن يتمكن الطلاب من الحجز في هذا الوقت', [
+    ['التاريخ', STATE.blockDay],
+    ['الوقت المحجوب', STATE.blockSlot],
+  ], false);
+}
+
+/* ---- VIEW APPTS ---- */
+function filterAppts(filter) {
+  STATE.apptFilter = filter;
+  document.getElementById('tab-upcoming').classList.toggle('active', filter === 'upcoming');
+  document.getElementById('tab-all').classList.toggle('active', filter === 'all');
+  const today = new Date().toISOString().split('T')[0];
+  const list = filter === 'upcoming'
+    ? APPOINTMENTS.filter(a => a.date >= today)
+    : APPOINTMENTS;
+  const el = document.getElementById('view-appts-list');
+  if (!list.length) { el.innerHTML = '<div class="no-appt">لا توجد مواعيد</div>'; return; }
+  el.innerHTML = list.map(a => {
+    const st = STUDENTS.find(s => s.id === a.studentId);
+    return `<div class="view-card">
+      <div class="view-row"><span class="view-label">الطالب</span><span class="view-value">${st.name}</span></div>
+      <div class="view-row"><span class="view-label">الرقم الجامعي</span><span class="view-value">${st.id_num}</span></div>
+      <div class="view-row"><span class="view-label">الموعد</span><span class="view-value">${a.label}</span></div>
+      <div class="view-row"><span class="view-label">الحالة</span>
+        <span class="avail-badge ${a.status === 'confirmed' ? 'available' : 'busy'}">${a.status === 'confirmed' ? 'مؤكد' : 'قيد الانتظار'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- NOTIFY ---- */
+function renderNotifyStudents() {
+  STATE.notifStudent = null;
+  document.getElementById('notif-send-btn').disabled = true;
+  document.getElementById('notif-students-list').innerHTML = STUDENTS.map(s =>
+    `<div class="notif-card" id="nc-${s.id}" onclick="selectNotifStudent(${s.id})">
+      <div class="notif-title-row">
+        <span class="notif-name">${s.name}</span>
+        <span class="notif-type general">${s.level}</span>
+      </div>
+      <div class="notif-msg">${s.id_num} | آخر موعد: ${s.lastAppt}</div>
+    </div>`
+  ).join('');
+}
+
+function selectNotifStudent(id) {
+  STATE.notifStudent = id;
+  document.querySelectorAll('.notif-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('nc-' + id).classList.add('selected');
+  document.getElementById('notif-send-btn').disabled = false;
+  const type = document.getElementById('notif-type-select').value;
+  const st = STUDENTS.find(s => s.id === id);
+  const msgs = {
+    reminder: `تذكير: لديك موعد إرشاد أكاديمي. يُرجى الحضور في الوقت المحدد.`,
+    cancel: `نأسف لإعلامك بإلغاء موعد الإرشاد الأكاديمي المقرر. يُرجى إعادة الحجز.`,
+    general: ``,
+  };
+  document.getElementById('notif-msg-input').value = msgs[type];
+}
+
+function sendNotif() {
+  const st = STUDENTS.find(s => s.id === STATE.notifStudent);
+  const msg = document.getElementById('notif-msg-input').value.trim();
+  if (!msg || !st) return;
+  const typeVal = document.getElementById('notif-type-select').value;
+  const typeLabel = typeVal === 'reminder' ? 'تذكير' : typeVal === 'cancel' ? 'إلغاء' : 'عامة';
+  showSuccess('✓', 'تم إرسال الإشعار', 'وصل الإشعار للطالب بنجاح', [
+    ['الطالب', st.name],
+    ['نوع الرسالة', typeLabel],
+    ['الرقم الجامعي', st.id_num],
+  ], false);
+}
+
+/* ---- SUCCESS ---- */
+function showSuccess(icon, title, sub, rows, isDanger) {
+  document.getElementById('success-icon').textContent = icon;
+  document.getElementById('success-icon').style.background = isDanger ? '#fcebeb' : '#e1f5ee';
+  document.getElementById('success-icon').style.color = isDanger ? '#a32d2d' : '#0f6e56';
+  document.getElementById('success-title').textContent = title;
+  document.getElementById('success-sub').textContent = sub;
+  document.getElementById('success-detail').innerHTML = rows.map(r =>
+    `<div class="sd-row"><span class="sd-label">${r[0]}</span><span class="sd-value">${r[1]}</span></div>`
+  ).join('');
+  go('success');
+}
+</script>
+</body>
+</html>
